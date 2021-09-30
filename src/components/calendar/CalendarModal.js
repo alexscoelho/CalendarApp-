@@ -1,9 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "react-modal";
 import moment from "moment";
 import Swal from "sweetalert2";
 
+import { useSelector, useDispatch } from "react-redux";
+import { uiCloseModal } from "../../actions/ui";
+
 import DateTimePicker from "react-datetime-picker";
+import { eventAddNew, eventClearActiveEvent } from "../../actions/events";
 
 const customStyles = {
   content: {
@@ -22,18 +26,31 @@ export const CalendarModal = () => {
   const now = moment().minutes(0).seconds(0).add(1, "hours");
   const endDate = now.clone().add(1, "hours");
 
+  const iniEvent = {
+    title: "",
+    notes: "",
+    start: now.toDate(),
+    end: endDate.toDate(),
+  };
+
   const [dateStart, setDateStart] = useState(now.toDate());
   const [dateEnd, setDateEnd] = useState(endDate.toDate());
   const [titleValid, setTitleValid] = useState(true);
 
-  const [formValues, setFormValues] = useState({
-    title: "Evento",
-    notes: "",
-    start: now.toDate(),
-    end: endDate.toDate(),
-  });
+  const { modalOpen } = useSelector((state) => state.ui);
+  const { activeEvent } = useSelector((state) => state.calendar);
 
+  const [formValues, setFormValues] = useState(iniEvent);
+
+  const dispatch = useDispatch();
   const { notes, title, start, end } = formValues;
+
+  useEffect(() => {
+    console.log(activeEvent);
+    if (activeEvent) {
+      setFormValues(activeEvent);
+    }
+  }, [activeEvent, setFormValues]);
 
   const handleInputChange = ({ target }) => {
     setFormValues({
@@ -43,8 +60,9 @@ export const CalendarModal = () => {
   };
 
   const closeModal = () => {
-    // TODO: close modal
-    console.log("closing modal");
+    dispatch(uiCloseModal());
+    dispatch(eventClearActiveEvent());
+    setFormValues(iniEvent);
   };
 
   const handleStartDateChange = (e) => {
@@ -81,12 +99,23 @@ export const CalendarModal = () => {
     }
 
     //TODO: realizar grabacion
+    dispatch(
+      eventAddNew({
+        ...formValues,
+        id: new Date().getTime(),
+        user: {
+          _id: "123",
+          name: "Alex",
+        },
+      })
+    );
+
     setTitleValid(true);
     closeModal();
   };
   return (
     <Modal
-      isOpen={true}
+      isOpen={modalOpen}
       onRequestClose={closeModal}
       closeTimeoutMS={200}
       style={customStyles}
