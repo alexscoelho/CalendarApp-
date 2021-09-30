@@ -7,7 +7,11 @@ import { useSelector, useDispatch } from "react-redux";
 import { uiCloseModal } from "../../actions/ui";
 
 import DateTimePicker from "react-datetime-picker";
-import { eventAddNew, eventClearActiveEvent } from "../../actions/events";
+import {
+  eventAddNew,
+  eventClearActiveEvent,
+  eventUpdated,
+} from "../../actions/events";
 
 const customStyles = {
   content: {
@@ -98,17 +102,20 @@ export const CalendarModal = () => {
       setTitleValid(false);
     }
 
-    //TODO: realizar grabacion
-    dispatch(
-      eventAddNew({
-        ...formValues,
-        id: new Date().getTime(),
-        user: {
-          _id: "123",
-          name: "Alex",
-        },
-      })
-    );
+    if (activeEvent) {
+      dispatch(eventUpdated(formValues));
+    } else {
+      dispatch(
+        eventAddNew({
+          ...formValues,
+          id: new Date().getTime(),
+          user: {
+            _id: "123",
+            name: "Alex",
+          },
+        })
+      );
+    }
 
     setTitleValid(true);
     closeModal();
